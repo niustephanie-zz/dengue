@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<script src="https://d3js.org/d3.v4.js"></script>
+
+
+<head>
+  <title>Dengue Trends</title>
+  <div class="title"> Dengue Trends</div>
+  <link rel="stylesheet" type = "text/css" href="dengue.css" />
+</head>
+
+<svg width="900" height="450">
+  <g class="layer" transform="translate(0,0)">
+  </g>
+</svg>
+</html>
+
+<script>
+
+var parser = d3.timeParse("%Y-%m-%d");
+
+var tooltip = d3.select("body").append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
+
+d3.csv("indonesia.csv", function(data) {
+  data.forEach(function(d) {
+    d.date = parser(d.Date);
+    d.amount = +d.Indonesia;
+  });
+  console.log(data);
+
+  var x = d3.scaleTime()
+    .domain(d3.extent(data, function(d) { return d.date}))
+    .range([0, 600]);
+
+    var xValue = function(d) { return d.date}, // data -> value
+        xMap = function(d) { return x(xValue(d));}; // data -> display
+
+  var y = d3.scaleLinear()
+  .domain(d3.extent(data, function(d) { return d.amount}))
+  .range([400, 0]); // Seems backwards because SVG is y-down
+
+
+    var yValue = function(d) { return d.Indonesia}, // data -> value
+        yMap = function(d) { return y(yValue(d));}; // data -> display
+
+  var xAxis = d3.axisBottom(x)
+  .ticks(14);
+
+  var yAxis = d3.axisLeft(y)
+  .ticks(10)
+  .tickPadding(5);
+
+ var svg = d3.select('body')
+  .append('svg')        // create an <svg> element
+    .attr('width', 900) // set its dimentions
+    .attr('height', 450);
+
+  d3.select('svg').append('g')
+  .attr('transform', 'translate(25, 425)')
+  .classed('x axis', true)
+  .call(xAxis);
+
+  d3.select('svg').append('g')
+  .attr('transform', 'translate(25, 25)')
+  .classed('y axis', true)
+  .call(yAxis);
+
+   d3.select('svg').selectAll(".dot")
+      .data(data)
+      .enter().append("circle")
+      .attr("class", "dot")
+      .attr("r", 3.5)
+      .attr("cx", xMap)
+      .attr("cy", yMap)
+      .style("fill", "red")
+      .attr("transform", "translate(25, 0)")
+      .on("mouseover", function(d) {
+
+          tooltip.transition()
+              .duration(200)
+               .style("opacity", .9);
+
+          tooltip.html(d["Date"] + "<br/> (" + yValue(d) + ")")
+               .style("left", (d3.event.pageX + 5) + "px")
+               .style("top", (d3.event.pageY - 28) + "px");
+      })
+      .on("mouseout", function(d) {
+          tooltip.transition()
+               .duration(500)
+               .style("opacity", 0);
+               });
+
+});
+
+</script>
+
+
+
+
